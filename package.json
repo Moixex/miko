@@ -1,12 +1,11 @@
 {
   "name": "miko",
   "version": "3.4.1",
-  "description": "Bot for osu!droid. (Optimized for Render deployment)",
+  "description": "Bot for osu!droid.",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node ./dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "start": "npm run build && node ./dist/index.js"
   },
   "author": "floemia",
   "license": "ISC",
@@ -18,19 +17,19 @@
     "chalk": "^4.1.2",
     "discord.js": "^14.21.0",
     "dotenv": "^16.5.0",
+    "fast-average-color-node": "^3.1.0",
     "express": "^4.18.2",
     "module-alias": "^2.2.3",
     "mongoose": "^8.15.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/node": "^22.7.4"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
     "@types/express": "^4.17.21",
     "@types/mongoose": "^5.11.97",
     "@types/chalk": "^4.1.1",
-    "@types/ws": "^8.5.10",
-    "ts-node": "^10.9.2"
+    "@types/ws": "^8.5.10"
   },
   "_moduleAliases": {
     "@core": "dist/core",
