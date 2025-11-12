@@ -42,7 +42,7 @@ export class Bot extends Client {
 		Logger.out({ prefix: "[CLIENT]", message: `Successfully registered ${this.events.size} event(s).`, color: "Purple" });
 
 		Logger.out({ prefix: "[CLIENT]", message: `Registering slash commands...`, color: "Purple", important: true });
-		await CommandHandler.registerCommands();
+		await CommandHandler.registerCommands(this);
 		Logger.out({ prefix: "[CLIENT]", message: `Successfully registered ${this.commands.size} slash command(s) and ${this.dev_commands.size} developer command(s).`, color: "Purple" });
 		await EmojiHelper.init();
 		
