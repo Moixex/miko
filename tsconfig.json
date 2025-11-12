@@ -3,26 +3,28 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "types": ["node"],               // 👈 Necesario para reconocer __dirname, process, etc.
+    "lib": ["ES2022"],               // 👈 Opcional pero mejora compatibilidad
     "strict": true,
     "noImplicitAny": true,
     "declaration": false,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": "src",
+    "esModuleInterop": true,
     "paths": {
-      "@core/*": ["core/*"],
+      "@core*": ["core/"],
+      "@utils*": ["utils/"],
       "@utils/*": ["utils/*"],
-      "@handlers/*": ["handlers/*"],
-      "@structures/*": ["structures/*"],
-      "@locales/*": ["locales/*"],
-      "@root/*": ["."]
+      "@handlers*": ["handlers/"],
+      "@locales*": ["locales/"],
+      "@root": ["."],
+      "@structures/*": ["structures/*"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules"]
 }
