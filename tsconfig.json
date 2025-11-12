@@ -9,20 +9,20 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
-	"rootDir": "src",
-	"baseUrl": "src",
-	"esModuleInterop": true,
-	"paths": {
-		"@core*": ["core/"],
-    "@utils*": ["utils/"],
-		"@utils/*": ["utils/*"],
-		"@handlers*": ["handlers/"],
-		"@locales*": ["locales/"],
-		"@root": ["."],
-		"@structures/*": ["structures/*"]
-	}
+    "rootDir": "src",
+    "baseUrl": "src",
+    "paths": {
+      "@core/*": ["core/*"],
+      "@utils/*": ["utils/*"],
+      "@handlers/*": ["handlers/*"],
+      "@structures/*": ["structures/*"],
+      "@locales/*": ["locales/*"],
+      "@root/*": ["."]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
