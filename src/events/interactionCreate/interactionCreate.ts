@@ -1,4 +1,4 @@
-iimport { Event } from "@structures/core";
+import { Event } from "@structures/core";
 import { InteractionHelper } from "@utils/helpers";
 import { ResponseEmbedBuilder, ResponseType } from "@utils/builders";
 import { Logger } from "@utils/logger";
