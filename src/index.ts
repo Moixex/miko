@@ -5,13 +5,13 @@ import express from "express";
 import { Bot } from "@core/Bot";
 import { Logger } from "@utils/logger";
 
-// 🧠 Servidor Express para que Render o Better Stack detecten un puerto
+// Servidor Express para que Render o Better Stack detecten un puerto
 const app = express();
 
-// ✅ Endpoint básico
+//  Endpoint 
 app.get("/", (_, res) => res.send("Miko bot is alive! ❤️"));
 
-// ✅ Endpoint para Better Stack (verifica que el cliente esté conectado)
+//  Endpoint para Better Stack 
 app.get("/status", (_, res) => {
   const isReady = client?.isReady?.() ?? false;
 
@@ -33,7 +33,7 @@ app.listen(PORT, () => {
   });
 });
 
-// 🧩 Inicia el bot normalmente
+// Inicia el bot normalmente
 const client = new Bot();
 
 client
@@ -50,7 +50,7 @@ client
     });
   });
 
-// 🧯 Manejadores globales de errores para evitar caídas
+// Manejadores globales de errores para evitar caídas
 process.on("uncaughtException", (err) => {
   Logger.err({
     prefix: "[FATAL]",
