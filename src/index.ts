@@ -50,4 +50,25 @@ client
     });
   });
 
+// 🧯 Manejadores globales de errores para evitar caídas
+process.on("uncaughtException", (err) => {
+  Logger.err({
+    prefix: "[FATAL]",
+    message: `❌ Uncaught Exception: ${err.message}`,
+    important: true,
+  });
+  Logger.err({
+    prefix: "[FATAL]",
+    message: err.stack || "No stack trace available",
+  });
+});
+
+process.on("unhandledRejection", (reason: any) => {
+  Logger.err({
+    prefix: "[FATAL]",
+    message: `⚠️ Unhandled Promise Rejection: ${reason}`,
+    important: true,
+  });
+});
+
 export { client };
