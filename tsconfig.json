@@ -3,8 +3,8 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "types": ["node"],               // 👈 Necesario para reconocer __dirname, process, etc.
-    "lib": ["ES2022"],               // 👈 Opcional pero mejora compatibilidad
+    "types": ["node"],               // Necesario para reconocer __dirname, process, etc.
+    "lib": ["ES2022"],               // Opcional pero mejora compatibilidad
     "strict": true,
     "noImplicitAny": true,
     "declaration": false,
