@@ -1,20 +1,13 @@
 import "dotenv/config";
 import "module-alias/register";
 import express from "express";
-
 import { Bot } from "@core/Bot";
 import { Logger } from "@utils/logger";
 
-//  Servidor Express para Render o Better Stack
 const app = express();
 
-// Endpoint básico
 app.get("/", (_, res) => res.send("Miko bot is alive! ❤️"));
 
-//  Variable global del bot
-let client: Bot;
-
-// endpoint de monitoreo (Better Stack)
 app.get("/status", (_, res) => {
   const isReady = client?.isReady?.() ?? false;
 
@@ -26,7 +19,6 @@ app.get("/status", (_, res) => {
   });
 });
 
-// Iniciar servidor web
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   Logger.out({
@@ -37,102 +29,51 @@ app.listen(PORT, () => {
   });
 });
 
-// función principal para iniciar el bot
-async function startBot() {
-  try {
-    client = new Bot();
-    await client.start();
+const client = new Bot();
 
+client
+  .start()
+  .then(() => {
     Logger.out({
       prefix: "[BOT]",
-      message: "✅ Bot iniciado correctamente.",
+      message: "✅ Miko started successfully.",
       color: "Green",
       important: true,
     });
-  } catch (error: any) {
+  })
+  .catch((err) => {
     Logger.err({
       prefix: "[BOT]",
-      message: `💥 Error al iniciar el bot: ${error?.stack || error}`,
+      message: `❌ Failed to start Miko: ${err.message}`,
       color: "Red",
       important: true,
     });
-  }
-}
+  });
 
-// Reinicio suave 
-async function restartBot() {
-  try {
-    Logger.out({
-      prefix: "[RESTART]",
-      message: "♻️ Reiniciando el bot tras error crítico...",
-      color: "Yellow",
-      important: true,
-    });
-
-    if (client && typeof client.destroy === "function") {
-      await client.destroy();
-    }
-
-    // Espera unos segundos antes de reiniciar (para evitar loops)
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    await startBot();
-
-    Logger.out({
-      prefix: "[RESTART]",
-      message: "✅ Bot reiniciado correctamente.",
-      color: "Green",
-      important: true,
-    });
-  } catch (error: any) {
-    Logger.err({
-      prefix: "[RESTART]",
-      message: `💣 Falló el reinicio del bot: ${error?.stack || error}`,
-      color: "Red",
-      important: true,
-    });
-  }
-}
-
-// Inicia el bot por primera vez
-startBot();
-
-// Manejadores de errores
-process.on("unhandledRejection", async (reason: any) => {
+process.on("unhandledRejection", (reason: any) => {
   Logger.err({
-    prefix: "[GLOBAL]",
-    message: `⚠️ Unhandled Rejection: ${reason?.stack || reason}`,
+    prefix: "[UNHANDLED REJECTION]",
+    message: reason?.stack || reason?.message || String(reason),
     color: "Red",
     important: true,
   });
-
-  if (String(reason).includes("DiscordAPIError") ||
-      String(reason).includes("Unknown interaction") ||
-      String(reason).includes("ECONNRESET")) {
-    await restartBot();
-  }
 });
 
-process.on("uncaughtException", async (error: any) => {
+process.on("uncaughtException", (err: Error) => {
   Logger.err({
-    prefix: "[GLOBAL]",
-    message: `💥 Uncaught Exception: ${error?.stack || error}`,
+    prefix: "[UNCAUGHT EXCEPTION]",
+    message: err.stack || err.message,
     color: "Red",
     important: true,
   });
-
-  if (error.message?.includes("DiscordAPIError") ||
-      error.message?.includes("Unknown interaction") ||
-      error.message?.includes("ECONNRESET")) {
-    await restartBot();
-  }
 });
 
-process.on("uncaughtExceptionMonitor", (error: any) => {
+process.on("uncaughtExceptionMonitor", (err: Error) => {
   Logger.err({
-    prefix: "[GLOBAL]",
-    message: `🧩 Exception monitored: ${error?.stack || error}`,
-    color: "Yellow",
+    prefix: "[EXCEPTION MONITOR]",
+    message: err.stack || err.message,
+    color: "Red",
+    important: true,
   });
 });
 
