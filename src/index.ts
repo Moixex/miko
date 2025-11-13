@@ -1,81 +1,103 @@
-import "dotenv/config";
-import "module-alias/register";
-import express from "express";
-
-import { Bot } from "@core/Bot";
+import { Event } from "@structures/core";
+import { InteractionHelper } from "@utils/helpers";
+import { ResponseEmbedBuilder, ResponseType } from "@utils/builders";
 import { Logger } from "@utils/logger";
+import { MikoError } from "@structures/errors";
 
-// 🧠 Servidor Express para que Render o Better Stack detecten un puerto
-const app = express();
+export const name = "interactionCreate";
 
-// ✅ Endpoint básico
-app.get("/", (_, res) => res.send("Miko bot is alive! ❤️"));
+export const run: Event<"interactionCreate">["run"] = async (client, interaction) => {
+  if (interaction.isChatInputCommand()) {
+    const str = InteractionHelper.getLocaleResponses(interaction);
+    const embed = new ResponseEmbedBuilder().setUser(interaction.user);
 
-// ⚙️ Inicia el bot
-const client = new Bot();
+    const cooldowns = client.cooldowns;
+    const now = new Date();
+    const command =
+      client.commands.get(interaction.commandName) ||
+      client.dev_commands.get(interaction.commandName);
 
-// ✅ Endpoint de monitoreo para Better Stack
-app.get("/status", (_, res) => {
-  const isReady = client?.isReady?.() ?? false;
+    if (!command) return;
 
-  res.status(isReady ? 200 : 500).json({
-    alive: true,
-    discord_connected: isReady,
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
+    // 🚫 Comando deshabilitado
+    if (command.disabled) {
+      embed.setType(ResponseType.ERROR).setDescription(str.general.disabled);
+      return interaction.reply({ embeds: [embed] });
+    }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  Logger.out({
-    prefix: "[WEB]",
-    message: `🌐 Web server running on port ${PORT}`,
-    color: "Green",
-    important: true,
-  });
-});
+    // 👨‍💻 Solo desarrolladores
+    if (command.developer && !client.config.developers.includes(interaction.user.id)) {
+      embed.setType(ResponseType.ERROR).setDescription(str.general.dev_only);
+      return interaction.reply({ embeds: [embed] });
+    }
 
-// 🧩 Inicia el cliente
-client
-  .start()
-  .catch((err) => {
-    Logger.err({
-      prefix: "[ERROR]",
-      message: `An error occurred while starting the bot.`,
-      important: true,
-    });
-    Logger.err({
-      prefix: "[ERROR]",
-      message: err.stack || "Unknown error",
-    });
-  });
+    // 🕒 Sistema de cooldown
+    const cd = command.cooldown ?? 5;
+    if (!cooldowns.has(command.data.name)) {
+      client.cooldowns.set(command.data.name, []);
+    }
 
-// 🛡️ Manejadores globales de errores para evitar caídas
-process.on("unhandledRejection", (reason: any) => {
-  Logger.err({
-    prefix: "[GLOBAL]",
-    message: `⚠️ Unhandled Rejection: ${reason?.stack || reason}`,
-    color: "Red",
-    important: true,
-  });
-});
+    const cdList = cooldowns.get(command.data.name)!;
+    const userCD = cdList.find((cd) => cd.user_id === interaction.user.id);
 
-process.on("uncaughtException", (error: any) => {
-  Logger.err({
-    prefix: "[GLOBAL]",
-    message: `💥 Uncaught Exception: ${error?.stack || error}`,
-    color: "Red",
-    important: true,
-  });
-});
+    if (userCD) {
+      const expiresAt = new Date(userCD.executed_at.getTime() + cd * 1000);
+      if (expiresAt > now) {
+        const timeLeft = (expiresAt.getTime() - now.getTime()) / 1000;
+        embed.setType(ResponseType.ERROR).setDescription(str.general.cooldown(timeLeft));
+        return interaction.reply({
+          embeds: [embed],
+          flags: "Ephemeral",
+        });
+      } else {
+        userCD.executed_at = now;
+      }
+    } else {
+      cdList.push({
+        user_id: interaction.user.id,
+        executed_at: now,
+      });
+    }
 
-process.on("uncaughtExceptionMonitor", (error: any) => {
-  Logger.err({
-    prefix: "[GLOBAL]",
-    message: `🧩 Exception monitored: ${error?.stack || error}`,
-    color: "Yellow",
-  });
-});
+    // ⚙️ Ejecución segura del comando
+    try {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply();
+      }
 
-export { client };
+      await command.run(client, interaction, str);
+    } catch (error: any) {
+      if (error instanceof MikoError) {
+        embed.setType(ResponseType.ERROR).setDescription(`\`${error.message}\``);
+      } else {
+        Logger.err({
+          prefix: "[SC]",
+          message: `An error has occurred while running the command /${command.data.name}.`,
+          color: "Red",
+          important: true,
+        });
+        Logger.err({
+          prefix: "[SC]",
+          message: error?.stack || error?.message || "Unknown error",
+          color: "Red",
+        });
+
+        embed.setType(ResponseType.ERROR).setDescription(str.general.error);
+      }
+
+      try {
+        if (interaction.deferred || interaction.replied) {
+          await interaction.editReply({ embeds: [embed] }).catch(() => {});
+        } else if (interaction.isRepliable()) {
+          await interaction.reply({ embeds: [embed] }).catch(() => {});
+        }
+      } catch (err: any) {
+        Logger.err({
+          prefix: "[SC]",
+          message: `⚠️ Failed to send error reply: ${err.message}`,
+          color: "Yellow",
+        });
+      }
+    }
+  }
+};
